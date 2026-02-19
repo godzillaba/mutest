@@ -33,11 +33,27 @@ async function runGambit(solFiles: string[]): Promise<Mutant[]> {
   const { stdout: remappingsRaw } = await execFile("forge", ["remappings"]);
   const remappings = remappingsRaw.trim().split("\n").filter(Boolean);
   const remapArgs = remappings.flatMap((r) => ["--solc_remappings", r]);
-  for (const file of solFiles) {
-    await execFile("gambit", ["mutate", "--filename", file, ...remapArgs]);
+
+  const results: Mutant[] = [];
+  const pending = [...solFiles];
+  const concurrency = 10;
+
+  async function worker() {
+    while (pending.length > 0) {
+      const file = pending.shift()!;
+      const outdir = `gambit_out/${file}`;
+      await execFile("gambit", [
+        "mutate", "--filename", file, "--outdir", outdir, ...remapArgs,
+      ]);
+      const raw = await readFile(`${outdir}/gambit_results.json`, "utf-8");
+      const mutants: Mutant[] = JSON.parse(raw);
+      for (const m of mutants) m.name = `${file}/${m.name}`;
+      results.push(...mutants);
+    }
   }
-  const raw = await readFile("gambit_out/gambit_results.json", "utf-8");
-  return JSON.parse(raw);
+
+  await Promise.all(Array.from({ length: concurrency }, worker));
+  return results;
 }
 
 async function processMutants(
