@@ -15,15 +15,17 @@ Pass one or more Solidity files. Mutest will:
 3. Run `forge test` against each mutant across the worker copies
 4. Report which mutants were killed (tests caught them) or survived (coverage gap)
 
-Example output:
+Surviving mutants are written to `gambit_out/survivors.json`.
 
-```
-[KILLED]   #1 DeleteExpressionMutation src/Counter.sol
-[KILLED]   #2 AssignmentMutation src/Counter.sol
-[SURVIVED] #3 AssignmentMutation src/Counter.sol
+### Re-testing survivors
 
-3 mutants tested: 2 killed, 1 survived
+Run without arguments to re-test only the survivors from a previous run:
+
+```sh
+npx @godzillaba/mutest
 ```
+
+This reads `gambit_out/survivors.json` (or falls back to `gambit_out/gambit_results.json`) and re-runs the test suite against those mutants. Useful after improving your tests to check if previously surviving mutants are now caught.
 
 ## Requirements
 
