@@ -21,7 +21,7 @@ async function setupWorkers(workerCount: number): Promise<string> {
     const dir = `${root}/worker-${i}`;
     return execFile("bash", [
       "-c",
-      `mkdir -p "${dir}" && git ls-files -z | tar -c --null -T - | tar -x -C "${dir}" && ln -s ${cwd}/node_modules ${dir}/node_modules && ln -s ${cwd}/lib ${dir}/lib`,
+      `mkdir -p "${dir}" && git ls-files -z --cached --others --exclude-standard | tar -c --null -T - | tar -x -C "${dir}" && ln -s ${cwd}/node_modules ${dir}/node_modules && ln -s ${cwd}/lib ${dir}/lib`,
     ]);
   });
   await Promise.all(workers);
