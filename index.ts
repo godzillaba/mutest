@@ -93,21 +93,27 @@ async function processMutants(
   );
 }
 
+async function loadExistingMutants(): Promise<Mutant[]> {
+  const raw = await readFile("gambit_out/gambit_results.json", "utf-8");
+  return JSON.parse(raw);
+}
+
 async function main() {
   const solFiles = process.argv.slice(2);
-  if (solFiles.length === 0) {
-    console.error("Usage: mutest <sol-file> [sol-file ...]");
-    process.exit(1);
-  }
-
   const workerCount = 10;
   console.log(`Setting up ${workerCount} workers...`);
   const tempDir = await setupWorkers(workerCount);
 
   try {
-    console.log(`Running gambit on ${solFiles.join(", ")}...`);
-    const mutants = await runGambit(solFiles);
-    console.log(`Generated ${mutants.length} mutants, running tests...\n`);
+    let mutants: Mutant[];
+    if (solFiles.length > 0) {
+      console.log(`Running gambit on ${solFiles.join(", ")}...`);
+      mutants = await runGambit(solFiles);
+    } else {
+      console.log("No files specified, using existing gambit_out/...");
+      mutants = await loadExistingMutants();
+    }
+    console.log(`${mutants.length} mutants, running tests...\n`);
     await processMutants(tempDir, mutants, workerCount);
   } finally {
     await rm(tempDir, { recursive: true, force: true });
