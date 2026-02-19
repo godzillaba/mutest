@@ -88,9 +88,21 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -a "export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
   -x
 
+# Install Gambit (Solidity mutation testing)
+ARG GAMBIT_VERSION=v1.0.6
+USER root
+RUN wget -q "https://github.com/Certora/gambit/releases/download/${GAMBIT_VERSION}/gambit-linux-${GAMBIT_VERSION}" -O /usr/local/bin/gambit && \
+  chmod +x /usr/local/bin/gambit
+USER node
+
 # Install Foundry (forge, cast, anvil, chisel)
 ENV PATH=$PATH:/home/node/.foundry/bin
 RUN curl -L https://foundry.paradigm.xyz | bash && foundryup
+
+# Symlink solc
+USER root
+RUN ln -s /home/node/.svm/0.8.33/solc-0.8.33 /usr/local/bin/solc
+USER node
 
 # Install Claude
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}

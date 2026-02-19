@@ -4,6 +4,10 @@
 
 Always commit with `--no-gpg-sign` — GPG signing is not configured in this container.
 
+## Solidity Toolchain
+
+`solc` is symlinked into PATH via the Dockerfile. If `solc` is not found (e.g. after a container rebuild), run `forge clean && forge build` — Foundry will re-install solc via svm automatically.
+
 ## Development Environment
 
 This project runs inside a devcontainer (`.devcontainer/`). The container is locked down with an iptables firewall that only allows traffic to a small allowlist of domains.

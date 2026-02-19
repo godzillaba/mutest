@@ -1,0 +1,10 @@
+{
+  "name": "mutest",
+  "version": "0.0.1",
+  "bin": {
+    "mutest": "./index.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.21.0"
+  }
+}

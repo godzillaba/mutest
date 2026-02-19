@@ -1,3 +1,6 @@
+gambit_out/
+node_modules
+
 # Compiler files
 cache/
 out/
