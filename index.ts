@@ -1,6 +1,6 @@
 #!/usr/bin/env -S npx tsx
 import { execFile as execFileCb } from "child_process";
-import { readFile, cp, rm } from "fs/promises";
+import { readFile, writeFile, cp, rm } from "fs/promises";
 import { promisify } from "util";
 
 const execFile = promisify(execFileCb);
@@ -65,8 +65,8 @@ async function processMutants(
   for (let i = 0; i < mutants.length; i++)
     queues[i % workerCount].push(mutants[i]);
 
-  let killed = 0;
-  let survived = 0;
+  let done = 0;
+  const survivors: Mutant[] = [];
 
   const workers = queues.map(async (queue, workerIdx) => {
     const workerDir = `${tempDir}/worker-${workerIdx}`;
@@ -74,23 +74,18 @@ async function processMutants(
       await cp(`gambit_out/${mutant.name}`, `${workerDir}/${mutant.original}`);
       try {
         await execFile("forge", ["test", "--optimize", "false", "--root", workerDir]);
-        survived++;
-        console.log(
-          `[SURVIVED] #${mutant.id} ${mutant.description} ${mutant.original}`,
-        );
-      } catch {
-        killed++;
-        console.log(
-          `[KILLED]   #${mutant.id} ${mutant.description} ${mutant.original}`,
-        );
-      }
+        survivors.push(mutant);
+      } catch {}
+      done++;
+      process.stdout.write(`\r${done}/${mutants.length} tested`);
     }
   });
 
   await Promise.all(workers);
-  console.log(
-    `\n${killed + survived} mutants tested: ${killed} killed, ${survived} survived`,
-  );
+  const killed = mutants.length - survivors.length;
+  console.log(`\n\n${killed} killed, ${survivors.length} survived`);
+  await writeFile("gambit_out/survivors.json", JSON.stringify(survivors, null, 2) + "\n");
+  console.log(`Wrote survivors.json`);
 }
 
 async function loadExistingMutants(): Promise<Mutant[]> {
