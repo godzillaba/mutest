@@ -77,7 +77,7 @@ async function processMutants(
         survivors.push(mutant);
       } catch {}
       done++;
-      process.stdout.write(`\r${done}/${mutants.length} tested`);
+      console.log(`${done}/${mutants.length} tested`);
     }
   });
 
