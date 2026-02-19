@@ -1,9 +1,12 @@
 {
   "name": "@godzillaba/mutest",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "bin": {
     "mutest": "./index.ts"
   },
+  "files": [
+    "index.ts"
+  ],
   "dependencies": {
     "tsx": "^4.21.0"
   }

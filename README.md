@@ -5,7 +5,7 @@ Mutation testing for Solidity. Uses [Gambit](https://github.com/Certora/gambit) 
 ## Usage
 
 ```sh
-npx . src/Counter.sol
+npx @godzillaba/mutest src/Counter.sol
 ```
 
 Pass one or more Solidity files. Mutest will:
