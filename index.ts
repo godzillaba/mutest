@@ -29,8 +29,11 @@ async function setupWorkers(workerCount: number): Promise<string> {
 
 async function runGambit(solFiles: string[]): Promise<Mutant[]> {
   await rm("gambit_out", { recursive: true, force: true });
+  const { stdout: remappingsRaw } = await execFile("forge", ["remappings"]);
+  const remappings = remappingsRaw.trim().split("\n").filter(Boolean);
+  const remapArgs = remappings.flatMap((r) => ["--solc_remappings", r]);
   for (const file of solFiles) {
-    await execFile("gambit", ["mutate", "--filename", file]);
+    await execFile("gambit", ["mutate", "--filename", file, ...remapArgs]);
   }
   const raw = await readFile("gambit_out/gambit_results.json", "utf-8");
   return JSON.parse(raw);

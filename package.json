@@ -1,6 +1,6 @@
 {
-  "name": "mutest",
-  "version": "0.0.1",
+  "name": "@godzillaba/mutest",
+  "version": "1.0.1",
   "bin": {
     "mutest": "./index.ts"
   },
