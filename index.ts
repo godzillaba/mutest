@@ -89,6 +89,14 @@ async function processMutants(
 }
 
 async function loadExistingMutants(): Promise<Mutant[]> {
+  try {
+    const raw = await readFile("gambit_out/survivors.json", "utf-8");
+    const survivors: Mutant[] = JSON.parse(raw);
+    if (survivors.length > 0) {
+      console.log(`Found survivors.json, re-testing ${survivors.length} survivors...`);
+      return survivors;
+    }
+  } catch {}
   const raw = await readFile("gambit_out/gambit_results.json", "utf-8");
   return JSON.parse(raw);
 }
