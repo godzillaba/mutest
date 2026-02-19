@@ -1,66 +1,33 @@
-## Foundry
+# mutest
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
-
-Foundry consists of:
-
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
-
-## Documentation
-
-https://book.getfoundry.sh/
+Mutation testing for Solidity. Uses [Gambit](https://github.com/Certora/gambit) to generate mutants and [Foundry](https://github.com/foundry-rs/foundry) to test them.
 
 ## Usage
 
-### Build
-
-```shell
-$ forge build
+```sh
+npx . src/Counter.sol
 ```
 
-### Test
+Pass one or more Solidity files. Mutest will:
 
-```shell
-$ forge test
+1. Create 10 parallel copies of your project
+2. Generate mutants with Gambit (e.g. `++` -> `--`, assignments replaced)
+3. Run `forge test` against each mutant across the worker copies
+4. Report which mutants were killed (tests caught them) or survived (coverage gap)
+
+Example output:
+
+```
+[KILLED]   #1 DeleteExpressionMutation src/Counter.sol
+[KILLED]   #2 AssignmentMutation src/Counter.sol
+[SURVIVED] #3 AssignmentMutation src/Counter.sol
+
+3 mutants tested: 2 killed, 1 survived
 ```
 
-### Format
+## Requirements
 
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+- [Foundry](https://getfoundry.sh/) (`forge`)
+- [Gambit](https://github.com/Certora/gambit) (`gambit`)
+- `solc` in PATH
+- Node.js >= 18
