@@ -15,12 +15,13 @@ interface Mutant {
 async function setupWorkers(workerCount: number): Promise<string> {
   const { stdout: tempDir } = await execFile("mktemp", ["-d"]);
   const root = tempDir.trim();
+  const cwd = process.cwd()
 
   const workers = Array.from({ length: workerCount }, (_, i) => {
     const dir = `${root}/worker-${i}`;
     return execFile("bash", [
       "-c",
-      `mkdir -p "${dir}" && git ls-files -z | tar -c --null -T - | tar -x -C "${dir}"`,
+      `mkdir -p "${dir}" && git ls-files -z | tar -c --null -T - | tar -x -C "${dir}" && ln -s ${cwd}/node_modules ${dir}/node_modules && ln -s ${cwd}/lib ${dir}/lib`,
     ]);
   });
   await Promise.all(workers);
@@ -56,7 +57,7 @@ async function processMutants(
     for (const mutant of queue) {
       await cp(`gambit_out/${mutant.name}`, `${workerDir}/${mutant.original}`);
       try {
-        await execFile("forge", ["test", "--root", workerDir]);
+        await execFile("forge", ["test", "--optimize", "false", "--root", workerDir]);
         survived++;
         console.log(
           `[SURVIVED] #${mutant.id} ${mutant.description} ${mutant.original}`,
