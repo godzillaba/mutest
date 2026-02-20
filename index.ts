@@ -71,11 +71,15 @@ async function processMutants(
   const workers = queues.map(async (queue, workerIdx) => {
     const workerDir = `${tempDir}/worker-${workerIdx}`;
     for (const mutant of queue) {
-      await cp(`gambit_out/${mutant.name}`, `${workerDir}/${mutant.original}`);
+      const dest = `${workerDir}/${mutant.original}`;
+      const backup = `${dest}.orig`;
+      await cp(dest, backup);
+      await cp(`gambit_out/${mutant.name}`, dest);
       try {
         await execFile("forge", ["test", "--optimize", "false", "--root", workerDir]);
         survivors.push(mutant);
       } catch {}
+      await cp(backup, dest);
       done++;
       console.log(`${done}/${mutants.length} tested`);
     }
