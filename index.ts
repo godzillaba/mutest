@@ -75,7 +75,7 @@ async function processMutants(
       await cp(dest, backup);
       await cp(`gambit_out/${mutant.original}/${mutant.name}`, dest);
       try {
-        await execFile("forge", ["test", "--optimize", "false", "--root", workerDir]);
+        await execFile("forge", ["test", "--optimize", "false", "--threads", "1", "--root", workerDir]);
         survivors.push(mutant);
       } catch {}
       await cp(backup, dest);
