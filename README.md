@@ -10,7 +10,7 @@ npx @godzillaba/mutest src/Counter.sol
 
 Pass one or more Solidity files. Mutest will:
 
-1. Create 10 parallel copies of your project
+1. Create parallel copies of your project (8 by default)
 2. Generate mutants with Gambit (e.g. `++` -> `--`, assignments replaced)
 3. Run `forge test` against each mutant across the worker copies
 4. Report which mutants were killed (tests caught them) or survived (coverage gap)
@@ -26,6 +26,14 @@ npx @godzillaba/mutest
 ```
 
 This reads `gambit_out/survivors.json` (or falls back to `gambit_out/gambit_results.json`) and re-runs the test suite against those mutants. Useful after improving your tests to check if previously surviving mutants are now caught.
+
+### Options
+
+`--workers <n>` / `-w <n>` — number of parallel workers (default: 8).
+
+```sh
+npx @godzillaba/mutest --workers 4 src/Counter.sol
+```
 
 ## Requirements
 

@@ -28,7 +28,7 @@ async function setupWorkers(workerCount: number): Promise<string> {
   return root;
 }
 
-async function runGambit(solFiles: string[]): Promise<Mutant[]> {
+async function runGambit(solFiles: string[], concurrency: number): Promise<Mutant[]> {
   await rm("gambit_out", { recursive: true, force: true });
   const { stdout: remappingsRaw } = await execFile("forge", ["remappings"]);
   const remappings = remappingsRaw.trim().replaceAll('/=', '=').split("\n").filter(Boolean);
@@ -36,7 +36,6 @@ async function runGambit(solFiles: string[]): Promise<Mutant[]> {
 
   const results: Mutant[] = [];
   const pending = [...solFiles];
-  const concurrency = 10;
 
   async function worker() {
     while (pending.length > 0) {
@@ -105,9 +104,22 @@ async function loadExistingMutants(): Promise<Mutant[]> {
   return JSON.parse(raw);
 }
 
+function parseArgs() {
+  const args = process.argv.slice(2);
+  let workers = 8;
+  const solFiles: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--workers" || args[i] === "-w") {
+      workers = parseInt(args[++i], 10);
+    } else {
+      solFiles.push(args[i]);
+    }
+  }
+  return { solFiles, workers };
+}
+
 async function main() {
-  const solFiles = process.argv.slice(2);
-  const workerCount = 10;
+  const { solFiles, workers: workerCount } = parseArgs();
   console.log(`Setting up ${workerCount} workers...`);
   const tempDir = await setupWorkers(workerCount);
 
@@ -115,7 +127,7 @@ async function main() {
     let mutants: Mutant[];
     if (solFiles.length > 0) {
       console.log(`Running gambit on ${solFiles.join(", ")}...`);
-      mutants = await runGambit(solFiles);
+      mutants = await runGambit(solFiles, workerCount);
     } else {
       console.log("No files specified, using existing gambit_out/...");
       mutants = await loadExistingMutants();
