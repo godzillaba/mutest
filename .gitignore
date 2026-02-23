@@ -1,3 +1,4 @@
+.devcontainer
 gambit_out/
 node_modules
 
