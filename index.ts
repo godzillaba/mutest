@@ -1,7 +1,8 @@
 #!/usr/bin/env -S npx tsx
 import { execFile as execFileCb } from "child_process";
-import { readFile, writeFile, cp, rm } from "fs/promises";
+import { readFile, writeFile, cp, rm, readdir } from "fs/promises";
 import { promisify } from "util";
+import { join } from "path";
 
 const execFile = promisify(execFileCb);
 
@@ -46,7 +47,6 @@ async function runGambit(solFiles: string[], concurrency: number): Promise<Mutan
       ]);
       const raw = await readFile(`${outdir}/gambit_results.json`, "utf-8");
       const mutants: Mutant[] = JSON.parse(raw);
-      for (const m of mutants) m.name = `${file}/${m.name}`;
       results.push(...mutants);
     }
   }
@@ -73,7 +73,7 @@ async function processMutants(
       const dest = `${workerDir}/${mutant.original}`;
       const backup = `${dest}.orig`;
       await cp(dest, backup);
-      await cp(`gambit_out/${mutant.name}`, dest);
+      await cp(`gambit_out/${mutant.original}/${mutant.name}`, dest);
       try {
         await execFile("forge", ["test", "--optimize", "false", "--root", workerDir]);
         survivors.push(mutant);
@@ -91,6 +91,16 @@ async function processMutants(
   console.log(`Wrote survivors.json`);
 }
 
+async function findJsonFiles(dir: string, name: string): Promise<string[]> {
+  const results: string[] = [];
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) results.push(...await findJsonFiles(full, name));
+    else if (entry.name === name) results.push(full);
+  }
+  return results;
+}
+
 async function loadExistingMutants(): Promise<Mutant[]> {
   try {
     const raw = await readFile("gambit_out/survivors.json", "utf-8");
@@ -100,8 +110,13 @@ async function loadExistingMutants(): Promise<Mutant[]> {
       return survivors;
     }
   } catch {}
-  const raw = await readFile("gambit_out/gambit_results.json", "utf-8");
-  return JSON.parse(raw);
+  const files = await findJsonFiles("gambit_out", "gambit_results.json");
+  const all: Mutant[] = [];
+  for (const f of files) {
+    const raw = await readFile(f, "utf-8");
+    all.push(...JSON.parse(raw));
+  }
+  return all;
 }
 
 function parseArgs() {
