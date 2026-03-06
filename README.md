@@ -35,6 +35,12 @@ This reads `gambit_out/survivors.json` (or falls back to `gambit_out/gambit_resu
 npx @godzillaba/mutest --workers 4 src/Counter.sol
 ```
 
+`--test-cmd <cmd>` / `-t <cmd>` — override the test command. The command runs via `bash -c` with the worker directory as `cwd`. Defaults to `forge test --optimize false --threads 1 --root <workerDir>`.
+
+```sh
+npx @godzillaba/mutest --test-cmd "npx hardhat test" src/Counter.sol
+```
+
 ## Requirements
 
 - [Foundry](https://getfoundry.sh/) (`forge`)

@@ -59,6 +59,7 @@ async function processMutants(
   tempDir: string,
   mutants: Mutant[],
   workerCount: number,
+  testCmd?: string,
 ) {
   const queues: Mutant[][] = Array.from({ length: workerCount }, () => []);
   for (let i = 0; i < mutants.length; i++)
@@ -75,7 +76,11 @@ async function processMutants(
       await cp(dest, backup);
       await cp(`gambit_out/${mutant.original}/${mutant.name}`, dest);
       try {
-        await execFile("forge", ["test", "--optimize", "false", "--threads", "1", "--root", workerDir]);
+        if (testCmd) {
+          await execFile("bash", ["-c", testCmd], { cwd: workerDir });
+        } else {
+          await execFile("forge", ["test", "--optimize", "false", "--threads", "1", "--root", workerDir]);
+        }
         survivors.push(mutant);
       } catch {}
       await cp(backup, dest);
@@ -122,19 +127,22 @@ async function loadExistingMutants(): Promise<Mutant[]> {
 function parseArgs() {
   const args = process.argv.slice(2);
   let workers = 8;
+  let testCmd: string | undefined;
   const solFiles: string[] = [];
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--workers" || args[i] === "-w") {
       workers = parseInt(args[++i], 10);
+    } else if (args[i] === "--test-cmd" || args[i] === "-t") {
+      testCmd = args[++i];
     } else {
       solFiles.push(args[i]);
     }
   }
-  return { solFiles, workers };
+  return { solFiles, workers, testCmd };
 }
 
 async function main() {
-  const { solFiles, workers: workerCount } = parseArgs();
+  const { solFiles, workers: workerCount, testCmd } = parseArgs();
   console.log(`Setting up ${workerCount} workers...`);
   const tempDir = await setupWorkers(workerCount);
 
@@ -148,7 +156,7 @@ async function main() {
       mutants = await loadExistingMutants();
     }
     console.log(`${mutants.length} mutants, running tests...\n`);
-    await processMutants(tempDir, mutants, workerCount);
+    await processMutants(tempDir, mutants, workerCount, testCmd);
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
