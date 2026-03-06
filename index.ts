@@ -79,7 +79,7 @@ async function processMutants(
         if (testCmd) {
           await execFile("bash", ["-c", testCmd], { cwd: workerDir });
         } else {
-          await execFile("forge", ["test", "--optimize", "false", "--threads", "1", "--root", workerDir]);
+          await execFile("forge", ["test", "--optimize", "false", "--fail-fast", "--threads", "1", "--root", workerDir]);
         }
         survivors.push(mutant);
       } catch {}
